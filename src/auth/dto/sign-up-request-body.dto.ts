@@ -1,6 +1,6 @@
-import { IsEmail, IsString } from 'class-validator';
+import {IsEmail, IsString} from 'class-validator';
 
-export class SignUpDto {
+export class SignUpRequestBodyDto {
   @IsString()
   nickname: string;
 

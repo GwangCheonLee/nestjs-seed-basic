@@ -15,12 +15,14 @@ async function bootstrap(): Promise<void> {
     logger: getLogLevels(process.env.NODE_ENV),
   });
 
+  const configService = app.get(ConfigService);
+
   app.useGlobalPipes(validationPipeConfig());
   app.enableCors();
   app.enableVersioning({type: VersioningType.URI});
   app.use(helmet());
+  app.setGlobalPrefix(configService.get('API_PREFIX'));
 
-  const configService = app.get(ConfigService);
   const port = configService.get('SERVER_PORT') || 3000;
 
   await app.listen(port);

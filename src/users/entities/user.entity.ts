@@ -5,21 +5,21 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { IsEmail } from 'class-validator';
+import {IsEmail} from 'class-validator';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'email', unique: true })
+  @Column({name: 'email', unique: true})
   @IsEmail()
   email: string;
 
-  @Column({ name: 'password' })
+  @Column({name: 'password'})
   password: string;
 
-  @Column({ name: 'nickname' })
+  @Column({name: 'nickname'})
   nickname: string;
 
   @CreateDateColumn()

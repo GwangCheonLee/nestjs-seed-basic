@@ -1,7 +1,7 @@
-import { UserRepository } from './user.repository';
-import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
-import { User } from '../entities/user.entity';
+import {UserRepository} from './user.repository';
+import {Test, TestingModule} from '@nestjs/testing';
+import {DataSource} from 'typeorm';
+import {User} from '../entities/user.entity';
 
 const mockDataSource = {
   createEntityManager: jest.fn(),
@@ -53,7 +53,7 @@ describe('UserRepository', () => {
 
   describe('isEmailRegistered', () => {
     it('should return true if email is registered', async () => {
-      const user = { email: 'email' };
+      const user = {email: 'email'};
 
       jest.spyOn(userRepository, 'createQueryBuilder').mockReturnValue({
         where: jest.fn().mockReturnThis(),

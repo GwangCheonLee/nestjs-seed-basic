@@ -1,10 +1,11 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { UserRepository } from '../users/repositories/user.repository';
-import { hashPlainText } from '../common/constants/encryption.constant';
-import { User } from '../users/entities/user.entity';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { AuthenticatedUser } from './interfaces/auth.interface';
+import {ConflictException, Injectable} from '@nestjs/common';
+import {UserRepository} from '../users/repositories/user.repository';
+import {hashPlainText} from '../common/constants/encryption.constant';
+import {User} from '../users/entities/user.entity';
+import {JwtService} from '@nestjs/jwt';
+import {ConfigService} from '@nestjs/config';
+import {AuthenticatedUser} from './interfaces/auth.interface';
+import {SignUpRequestBodyDto} from './dto/sign-up-request-body.dto';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +17,7 @@ export class AuthService {
 
   generateAccessToken(user: User): string {
     return this.jwtService.sign(
-      { user: this.extractPayloadFromUser(user) },
+      {user: this.extractPayloadFromUser(user)},
       {
         secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
         expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),
@@ -25,11 +26,11 @@ export class AuthService {
   }
 
   async signUp(
-    email: string,
-    password: string,
-    nickname: string,
+    signUpRequestBodyDto: SignUpRequestBodyDto,
   ): Promise<AuthenticatedUser> {
-    const emailExists = await this.userRepository.isEmailRegistered(email);
+    const emailExists = await this.userRepository.isEmailRegistered(
+      signUpRequestBodyDto.email,
+    );
 
     if (emailExists) {
       throw new ConflictException(
@@ -37,12 +38,12 @@ export class AuthService {
       );
     }
 
-    const hashedPassword = await hashPlainText(password);
+    const hashedPassword = await hashPlainText(signUpRequestBodyDto.password);
 
     const user = await this.userRepository.signUp(
-      email,
+      signUpRequestBodyDto.email,
       hashedPassword,
-      nickname,
+      signUpRequestBodyDto.nickname,
     );
 
     return this.extractPayloadFromUser(user);

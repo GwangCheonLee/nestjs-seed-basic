@@ -1,11 +1,11 @@
-import { DataSource, Repository } from 'typeorm';
+import {DataSource, Repository} from 'typeorm';
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { User } from '../entities/user.entity';
-import { compareWithHash } from '../../common/constants/encryption.constant';
+import {User} from '../entities/user.entity';
+import {compareWithHash} from '../../common/constants/encryption.constant';
 
 @Injectable()
 export class UserRepository extends Repository<User> {
@@ -28,7 +28,7 @@ export class UserRepository extends Repository<User> {
   async isEmailRegistered(email: string): Promise<boolean> {
     const userQuery = this.createQueryBuilder('user').where(
       'user.email = :email',
-      { email },
+      {email},
     );
     const existingUser = await userQuery.getOne();
 
@@ -41,7 +41,7 @@ export class UserRepository extends Repository<User> {
   ): Promise<User> {
     const queryBuilder = this.createQueryBuilder('user').where(
       'user.email = :email',
-      { email },
+      {email},
     );
 
     const user = await queryBuilder.getOne();
@@ -59,7 +59,7 @@ export class UserRepository extends Repository<User> {
   async findUserById(userId: number): Promise<User> {
     const queryBuilder = this.createQueryBuilder('user').where(
       'user.id = :userId',
-      { userId },
+      {userId},
     );
 
     const user = await queryBuilder.getOne();
