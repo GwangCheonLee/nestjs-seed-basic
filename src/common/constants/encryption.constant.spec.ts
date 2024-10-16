@@ -1,4 +1,4 @@
-import { compareWithHash, hashPlainText } from './encryption.constant'; // replace './yourfile' with actual path to your file
+import {compareWithHash, hashPlainText} from './encryption.constant';
 
 describe('bcrypt functions', () => {
   const plainText = 'password';

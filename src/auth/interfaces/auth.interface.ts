@@ -18,4 +18,4 @@ export interface SignInResponse {
  * Represents the structure of the response when a user signs up.
  * This is likely the same as AuthenticatedUser but is separated for clarity and possible future changes.
  */
-export interface SignUpResponse extends AuthenticatedUser {}
+export type SignUpResponse = AuthenticatedUser;

@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppService } from './app.service';
+import {Test, TestingModule} from '@nestjs/testing';
+import {AppService} from './app.service';
 
 describe('AppService', () => {
   let appService: AppService;
@@ -19,6 +19,12 @@ describe('AppService', () => {
   describe('getHealth', () => {
     it('should return an empty string', () => {
       expect(appService.getHealth()).toBe('');
+    });
+  });
+
+  describe('ping', () => {
+    it('should return pong string', () => {
+      expect(appService.ping()).toBe('pong');
     });
   });
 });

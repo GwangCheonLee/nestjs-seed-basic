@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import {Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {TypeOrmModuleOptions, TypeOrmOptionsFactory} from '@nestjs/typeorm';
 
 /**
  * TypeormConfig class is responsible for creating the TypeOrmModuleOptions object.

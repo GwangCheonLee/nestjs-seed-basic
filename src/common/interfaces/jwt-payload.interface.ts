@@ -1,4 +1,4 @@
-import { AuthenticatedUser } from '../../auth/interfaces/auth.interface';
+import {AuthenticatedUser} from '../../auth/interfaces/auth.interface';
 
 export interface JwtPayloadInterface {
   user: AuthenticatedUser;
