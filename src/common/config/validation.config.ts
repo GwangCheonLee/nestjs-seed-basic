@@ -1,9 +1,9 @@
-import { ValidationPipe } from '@nestjs/common';
+import {ValidationPipe} from '@nestjs/common';
 import * as Joi from 'joi';
 
 /**
  * Generates a ValidationPipe configuration
- * @returns {ValidationPipe} Configured instance of ValidationPipe
+ * @return {ValidationPipe} Configured instance of ValidationPipe
  */
 export const validationPipeConfig = (): ValidationPipe => {
   return new ValidationPipe({
@@ -15,7 +15,7 @@ export const validationPipeConfig = (): ValidationPipe => {
 
 /**
  * Defines a Joi validation schema for environment variables
- * @returns {Joi.ObjectSchema} Joi object schema for env variables
+ * @return {Joi.ObjectSchema} Joi object schema for env variables
  */
 export const validationSchemaConfig = (): Joi.ObjectSchema => {
   return Joi.object({
