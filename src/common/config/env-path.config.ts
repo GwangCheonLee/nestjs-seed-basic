@@ -1,6 +1,6 @@
 /**
  * Function to determine the environment file path based on NODE_ENV
- * @returns string - Corresponding environment file path or default if not matched
+ * @return {string} - Corresponding environment file path or default if not matched
  */
 export const getEnvPath = (): string => {
   const envMap = {
