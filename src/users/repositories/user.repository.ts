@@ -9,7 +9,7 @@ import {compareWithHash} from '../../common/constants/encryption.constant';
 
 @Injectable()
 export class UserRepository extends Repository<User> {
-  constructor(private dataSource: DataSource) {
+  constructor(dataSource: DataSource) {
     super(User, dataSource.createEntityManager());
   }
 

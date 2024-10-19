@@ -4,11 +4,11 @@ import {hashPlainText} from '../common/constants/encryption.constant';
 import {User} from '../users/entities/user.entity';
 import {JwtService} from '@nestjs/jwt';
 import {ConfigService} from '@nestjs/config';
-import {AuthenticatedUser} from './interfaces/auth.interface';
+import {AuthenticatedUser} from './interfaces/authentication.interface';
 import {SignUpRequestBodyDto} from './dto/sign-up-request-body.dto';
 
 @Injectable()
-export class AuthService {
+export class AuthenticationService {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,

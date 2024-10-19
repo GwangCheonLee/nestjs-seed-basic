@@ -6,11 +6,14 @@ import {TypeormConfig} from './common/config/typeorm.config';
 import {ConfigModule} from '@nestjs/config';
 import {validationSchemaConfig} from './common/config/validation.config';
 import {getEnvPath} from './common/config/env-path.config';
-import {AuthModule} from './auth/auth.module';
+import {APP_FILTER, APP_INTERCEPTOR} from '@nestjs/core';
+import {ResponseInterceptor} from './common/interceptors/response.interceptor';
+import {HttpExceptionFilter} from './common/filters/exception.filter';
+import {AuthenticationModule} from './authentication/authentication.module';
 
 @Module({
   imports: [
-    AuthModule,
+    AuthenticationModule,
     TypeOrmModule.forRootAsync({
       useClass: TypeormConfig,
     }),
@@ -21,7 +24,17 @@ import {AuthModule} from './auth/auth.module';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+  ],
 })
 /**
  * 애플리케이션의 루트 모듈을 정의합니다.

@@ -1,14 +1,17 @@
 import {Body, Controller, HttpCode, Post, UseGuards} from '@nestjs/common';
 import {LocalGuard} from './guards/local.guard';
-import {AuthService} from './auth.service';
+import {AuthenticationService} from './authentication.service';
 import {SignUpRequestBodyDto} from './dto/sign-up-request-body.dto';
 import {User} from '../users/entities/user.entity';
 import {GetUser} from '../users/decorators/get-user';
-import {SignInResponse, SignUpResponse} from './interfaces/auth.interface';
+import {
+  SignInResponse,
+  SignUpResponse,
+} from './interfaces/authentication.interface';
 
-@Controller('auth')
-export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+@Controller({version: '1', path: 'authentication'})
+export class AuthenticationController {
+  constructor(private readonly authService: AuthenticationService) {}
 
   @Post('/sign-up')
   async signUp(
