@@ -15,15 +15,6 @@ export class AuthenticationService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async signIn(
-    user: User,
-  ): Promise<{accessToken: string; refreshToken: string}> {
-    return {
-      accessToken: await this.generateAccessToken(user),
-      refreshToken: this.generateRefreshToken(user),
-    };
-  }
-
   async generateAccessToken(user: User): Promise<string> {
     const accessToken = this.jwtService.sign(
       {
@@ -46,8 +37,8 @@ export class AuthenticationService {
     return accessToken;
   }
 
-  generateRefreshToken(user: User): string {
-    return this.jwtService.sign(
+  async generateRefreshToken(user: User): Promise<string> {
+    const refreshToken = this.jwtService.sign(
       {
         user: this.extractPayloadFromUser(user),
         sub: user.id,
@@ -60,6 +51,12 @@ export class AuthenticationService {
         algorithm: 'HS256',
       },
     );
+
+    await this.userRepository.update(user.id, {
+      currentRefreshToken: refreshToken,
+    });
+
+    return refreshToken;
   }
 
   async signUp(
@@ -84,6 +81,15 @@ export class AuthenticationService {
     );
 
     return this.extractPayloadFromUser(user);
+  }
+
+  async signIn(
+    user: User,
+  ): Promise<{accessToken: string; refreshToken: string}> {
+    return {
+      accessToken: await this.generateAccessToken(user),
+      refreshToken: await this.generateRefreshToken(user),
+    };
   }
 
   private extractPayloadFromUser(user: User): AuthenticatedUser {

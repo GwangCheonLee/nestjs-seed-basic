@@ -25,6 +25,9 @@ export class User {
   @Column({nullable: true})
   currentAccessToken: string | null;
 
+  @Column({nullable: true})
+  currentRefreshToken: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

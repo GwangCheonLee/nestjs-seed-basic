@@ -19,7 +19,7 @@ export class JwtAccessStrategy extends PassportStrategy(
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get('JWT_ACCESS_TOKEN_SECRET'),
-      passReqToCallback: true, // request 객체를 콜백으로 전달받기 위해 추가
+      passReqToCallback: true,
     });
   }
 

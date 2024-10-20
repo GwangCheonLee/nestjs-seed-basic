@@ -1,5 +1,5 @@
 import {ExtractJwt, Strategy} from 'passport-jwt';
-import {Injectable} from '@nestjs/common';
+import {Injectable, UnauthorizedException} from '@nestjs/common';
 import {PassportStrategy} from '@nestjs/passport';
 import {ConfigService} from '@nestjs/config';
 import {GuardEnum} from '../enum/guard.enum';
@@ -19,10 +19,23 @@ export class JwtRefreshStrategy extends PassportStrategy(
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get('JWT_REFRESH_TOKEN_SECRET'),
+      passReqToCallback: true,
     });
   }
 
-  async validate(payload: JwtPayloadInterface): Promise<User> {
-    return await this.userRepository.findUserById(payload.user.id);
+  async validate(req: Request, payload: JwtPayloadInterface): Promise<User> {
+    const user: User = await this.userRepository.findUserById(payload.user.id);
+
+    if (!user || !user.currentRefreshToken) {
+      throw new UnauthorizedException('Invalid or expired token.');
+    }
+
+    const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+
+    if (user.currentRefreshToken !== token) {
+      throw new UnauthorizedException('Token mismatch.');
+    }
+
+    return user;
   }
 }
