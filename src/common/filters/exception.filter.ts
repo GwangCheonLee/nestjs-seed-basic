@@ -4,6 +4,7 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 
 /**
@@ -13,12 +14,16 @@ import {
  */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  logger = new Logger(HttpExceptionFilter.name);
+
   /**
    * 예외를 처리하여 HTTP 응답을 반환합니다.
    * @param {unknown} exception - 발생한 예외 객체
    * @param {ArgumentsHost} host - 현재 실행 컨텍스트
    */
   catch(exception: unknown, host: ArgumentsHost) {
+    this.logger.error(exception);
+    console.error(exception);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const status =
