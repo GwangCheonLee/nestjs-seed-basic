@@ -24,9 +24,6 @@ export class AuthenticationController {
   @HttpCode(200)
   @UseGuards(LocalGuard)
   async signIn(@GetUser() user: User): Promise<SignInResponse> {
-    return {
-      accessToken: this.authService.generateAccessToken(user),
-      refreshToken: this.authService.generateRefreshToken(user),
-    };
+    return this.authService.signIn(user);
   }
 }

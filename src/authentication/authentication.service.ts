@@ -15,6 +15,15 @@ export class AuthenticationService {
     private readonly userRepository: UserRepository,
   ) {}
 
+  signIn(user: User): {accessToken: string; refreshToken: string} {
+    const currentAccessToken = this.generateAccessToken(user);
+    this.userRepository.update(user.id, {currentAccessToken});
+    return {
+      accessToken: currentAccessToken,
+      refreshToken: this.generateRefreshToken(user),
+    };
+  }
+
   generateAccessToken(user: User): string {
     return this.jwtService.sign(
       {
