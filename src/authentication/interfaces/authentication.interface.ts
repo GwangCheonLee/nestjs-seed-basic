@@ -12,6 +12,7 @@ export interface AuthenticatedUser {
  */
 export interface SignInResponse {
   accessToken: string;
+  refreshToken: string;
 }
 
 /**

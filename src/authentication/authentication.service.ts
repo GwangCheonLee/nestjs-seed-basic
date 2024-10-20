@@ -17,10 +17,32 @@ export class AuthenticationService {
 
   generateAccessToken(user: User): string {
     return this.jwtService.sign(
-      {user: this.extractPayloadFromUser(user)},
+      {
+        user: this.extractPayloadFromUser(user),
+        sub: user.id,
+      },
       {
         secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
         expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),
+        issuer: 'nestjs-seed',
+        audience: user.email,
+        algorithm: 'HS256',
+      },
+    );
+  }
+
+  generateRefreshToken(user: User): string {
+    return this.jwtService.sign(
+      {
+        user: this.extractPayloadFromUser(user),
+        sub: user.id,
+      },
+      {
+        secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
+        expiresIn: this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME'),
+        issuer: 'nestjs-seed',
+        audience: user.email,
+        algorithm: 'HS256',
       },
     );
   }
