@@ -15,9 +15,12 @@ export class AuthenticationService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  signIn(user: User): {accessToken: string; refreshToken: string} {
+  async signIn(
+    user: User,
+  ): Promise<{accessToken: string; refreshToken: string}> {
     const currentAccessToken = this.generateAccessToken(user);
-    this.userRepository.update(user.id, {currentAccessToken});
+    await this.userRepository.update(user.id, {currentAccessToken});
+
     return {
       accessToken: currentAccessToken,
       refreshToken: this.generateRefreshToken(user),
