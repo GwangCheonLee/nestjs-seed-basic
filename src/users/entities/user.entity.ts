@@ -22,6 +22,9 @@ export class User {
   @Column({name: 'nickname'})
   nickname: string;
 
+  @Column({nullable: true})
+  currentAccessToken: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 
