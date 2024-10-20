@@ -6,13 +6,14 @@ import {TypeormConfig} from './common/config/typeorm.config';
 import {ConfigModule} from '@nestjs/config';
 import {validationSchemaConfig} from './common/config/validation.config';
 import {getEnvPath} from './common/config/env-path.config';
-import {APP_FILTER, APP_INTERCEPTOR} from '@nestjs/core';
+import {APP_INTERCEPTOR} from '@nestjs/core';
 import {ResponseInterceptor} from './common/interceptors/response.interceptor';
-import {HttpExceptionFilter} from './common/filters/exception.filter';
 import {AuthenticationModule} from './authentication/authentication.module';
+import {UserModule} from './users/user.module';
 
 @Module({
   imports: [
+    UserModule,
     AuthenticationModule,
     TypeOrmModule.forRootAsync({
       useClass: TypeormConfig,
@@ -26,10 +27,6 @@ import {AuthenticationModule} from './authentication/authentication.module';
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
