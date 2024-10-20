@@ -8,6 +8,7 @@ import {
   SignInResponse,
   SignUpResponse,
 } from './interfaces/authentication.interface';
+import {JwtRefreshGuard} from './guards/jwt-refresh.guard';
 
 @Controller({version: '1', path: 'authentication'})
 export class AuthenticationController {
@@ -25,5 +26,13 @@ export class AuthenticationController {
   @UseGuards(LocalGuard)
   async signIn(@GetUser() user: User): Promise<SignInResponse> {
     return this.authService.signIn(user);
+  }
+
+  @Post('access-token')
+  @UseGuards(JwtRefreshGuard)
+  @HttpCode(200)
+  async getAccessToken(@GetUser() user: User) {
+    const accessToken = await this.authService.generateAccessToken(user);
+    return {accessToken};
   }
 }

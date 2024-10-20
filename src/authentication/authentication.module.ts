@@ -5,6 +5,7 @@ import {LocalStrategy} from './strategy/local.strategy';
 import {UserRepository} from '../users/repositories/user.repository';
 import {JwtModule} from '@nestjs/jwt';
 import {JwtAccessStrategy} from './strategy/jwt-access.strategy';
+import {JwtRefreshStrategy} from './strategy/jwt-refresh.strategy';
 
 @Module({
   imports: [JwtModule],
@@ -13,6 +14,7 @@ import {JwtAccessStrategy} from './strategy/jwt-access.strategy';
     AuthenticationService,
     LocalStrategy,
     JwtAccessStrategy,
+    JwtRefreshStrategy,
     UserRepository,
   ],
 })
