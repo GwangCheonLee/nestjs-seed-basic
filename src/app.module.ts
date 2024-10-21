@@ -10,11 +10,13 @@ import {APP_INTERCEPTOR} from '@nestjs/core';
 import {ResponseInterceptor} from './common/interceptors/response.interceptor';
 import {AuthenticationModule} from './authentication/authentication.module';
 import {UserModule} from './users/user.module';
+import {RedisModule} from './common/redis/redis.module';
 
 @Module({
   imports: [
     UserModule,
     AuthenticationModule,
+    RedisModule,
     TypeOrmModule.forRootAsync({
       useClass: TypeormConfig,
     }),
