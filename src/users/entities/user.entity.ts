@@ -6,7 +6,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import {IsEmail} from 'class-validator';
+import {UserRole} from '../enum/user-role.enum';
 
+/**
+ * User Entity
+ */
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -22,11 +26,13 @@ export class User {
   @Column({name: 'nickname'})
   nickname: string;
 
-  @Column({nullable: true})
-  currentAccessToken: string | null;
-
-  @Column({nullable: true})
-  currentRefreshToken: string | null;
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: [UserRole.USER],
+    array: true,
+  })
+  roles: UserRole[];
 
   @CreateDateColumn()
   createdAt: Date;
