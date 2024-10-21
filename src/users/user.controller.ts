@@ -22,12 +22,14 @@ import {UserPaginatedDto} from './dto/user-paginated.dto';
 import {UserRole} from './enum/user-role.enum';
 import {UserRoles} from '../authentication/decorators/user-roles.decorator';
 import {JwtAccessGuard} from '../authentication/guards/jwt-access.guard';
+import {UserRoleGuard} from '../authentication/guards/user-role.guard';
 
 /**
  * 사용자 관련 요청을 처리하는 컨트롤러입니다.
  * @class UserController
  */
-@UseGuards(JwtAccessGuard)
+@UseGuards(JwtAccessGuard, UserRoleGuard)
+@UserRoles(UserRole.ADMIN)
 @Controller({version: '1', path: 'users'})
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -38,11 +40,10 @@ export class UserController {
    * @return {Promise<PaginatedUsersInterface>} - 페이지네이션된 사용자 목록
    */
   @Get()
-  @UserRoles(UserRole.ADMIN)
+  @UseGuards()
   async getUsers(
     @Query() userPaginatedDto: UserPaginatedDto,
   ): Promise<PaginatedUsersInterface> {
-    console.log('?');
     return this.userService.paginateUsers(userPaginatedDto);
   }
 
