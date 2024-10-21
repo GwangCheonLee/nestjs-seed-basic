@@ -40,7 +40,6 @@ export class UserController {
    * @return {Promise<PaginatedUsersInterface>} - 페이지네이션된 사용자 목록
    */
   @Get()
-  @UseGuards()
   async getUsers(
     @Query() userPaginatedDto: UserPaginatedDto,
   ): Promise<PaginatedUsersInterface> {

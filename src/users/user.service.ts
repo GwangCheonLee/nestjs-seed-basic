@@ -8,6 +8,7 @@ import {User} from './entities/user.entity';
 import {UpdateUserDto} from './dto/update-user.dto';
 import {UserPaginatedDto} from './dto/user-paginated.dto';
 import {extractPayloadFromUser} from './constants/user.constant';
+import {hashPlainText} from '../common/constants/encryption.constant';
 
 /**
  * 사용자 관련 비즈니스 로직을 처리하는 서비스입니다.
@@ -63,7 +64,7 @@ export class UserService {
    * 사용자를 수정합니다.
    * @param {number} id - 수정할 사용자 ID
    * @param {UpdateUserDto} updateUserDto - 수정할 데이터
-   * @return {Promise<User>} - 수정된 사용자
+   * @return {Promise<UserWithoutPassword>} - 수정된 사용자
    */
   async updateUser(
     id: number,
@@ -72,6 +73,10 @@ export class UserService {
     const user = await this.getUserById(id);
     if (!user) {
       throw new NotFoundException('User not found.');
+    }
+
+    if (updateUserDto.password) {
+      updateUserDto.password = await hashPlainText(updateUserDto.password);
     }
 
     Object.assign(user, updateUserDto);
