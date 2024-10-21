@@ -11,6 +11,13 @@ export class LocalStrategy extends PassportStrategy(Strategy, GuardEnum.LOCAL) {
     super({usernameField: 'email'});
   }
 
+  /**
+   * 로컬 전략으로 유저 자격 증명을 검증하는 메서드입니다.
+   *
+   * @param {string} email - 유저의 이메일
+   * @param {string} password - 유저의 비밀번호
+   * @return {Promise<User>} - 검증된 유저 정보를 반환
+   */
   async validate(email: string, password: string): Promise<User> {
     return await this.userRepository.verifyUserCredentials(email, password);
   }

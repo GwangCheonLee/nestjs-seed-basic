@@ -8,13 +8,13 @@ import {LogLevel} from '@nestjs/common';
 export function getLogLevels(env: string): LogLevel[] {
   switch (env) {
     case 'docker':
-    case 'local': // local 환경에서는 모든 로그 출력
+    case 'local':
       return ['log', 'error', 'warn', 'debug', 'verbose'];
-    case 'dev': // dev 환경에서는 일반 로그까지 출력
+    case 'dev':
       return ['log', 'error', 'warn'];
-    case 'prod': // 프로덕션에서는 에러와 경고만 출력
+    case 'prod':
       return ['error', 'warn'];
-    default: // 기본적으로 에러와 경고만 출력
+    default:
       return ['error', 'warn'];
   }
 }
