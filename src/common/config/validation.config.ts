@@ -34,8 +34,8 @@ export const validationSchemaConfig = (): Joi.ObjectSchema => {
     REDIS_USERNAME: Joi.string().optional(),
     REDIS_PASSWORD: Joi.string().optional(),
     JWT_ACCESS_TOKEN_SECRET: Joi.string().required(),
-    JWT_ACCESS_TOKEN_EXPIRATION_TIME: Joi.string().required(),
+    JWT_ACCESS_TOKEN_EXPIRATION_TIME: Joi.number().required(),
     JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
-    JWT_REFRESH_TOKEN_EXPIRATION_TIME: Joi.string().required(),
+    JWT_REFRESH_TOKEN_EXPIRATION_TIME: Joi.number().required(),
   });
 };
