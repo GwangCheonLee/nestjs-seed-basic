@@ -37,6 +37,14 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      {argsIgnorePattern: '^_', varsIgnorePattern: '^_'}, // _로 시작하는 변수 무시
+    ],
+    'no-unused-vars': [
+      'warn',
+      {argsIgnorePattern: '^_', varsIgnorePattern: '^_'}, // _로 시작하는 변수 무시
+    ],
 
     // 네이밍 컨벤션
     // - 헝가리안 표기법 금지
