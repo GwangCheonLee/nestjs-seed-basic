@@ -1,4 +1,4 @@
-import {ExtractJwt, Strategy} from 'passport-jwt';
+import {Strategy} from 'passport-jwt';
 import {Injectable, UnauthorizedException} from '@nestjs/common';
 import {PassportStrategy} from '@nestjs/passport';
 import {ConfigService} from '@nestjs/config';
@@ -7,7 +7,8 @@ import {UserRepository} from '../../users/repositories/user.repository';
 import {JwtPayloadInterface} from '../interfaces/jwt-payload.interface';
 import {User} from '../../users/entities/user.entity';
 import {compareWithHash} from '../../common/constants/encryption.constant';
-import {RedisService} from '../../common/redis/redis.service';
+import {RedisService} from '../../redis/redis.service';
+import {Request} from 'express';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -22,7 +23,12 @@ export class JwtRefreshStrategy extends PassportStrategy(
     private readonly redisService: RedisService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req: Request) => {
+        if (req.cookies && req.cookies.refreshToken) {
+          return req.cookies.refreshToken;
+        }
+        return null;
+      },
       secretOrKey: configService.get('JWT_REFRESH_TOKEN_SECRET'),
       passReqToCallback: true,
     });
@@ -51,7 +57,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
         throw new UnauthorizedException('Token mismatch.');
       }
 
-      const userTokenByRequest = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+      const userTokenByRequest = req.cookies.refreshToken;
       const isValidate = await compareWithHash(
         userTokenByRequest,
         hashedUserRefreshTokenByRedis,

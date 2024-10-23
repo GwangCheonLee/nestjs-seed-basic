@@ -1,14 +1,15 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
-import {UserRepository} from './repositories/user.repository';
 import {
-  PaginatedUsersInterface,
-  UserWithoutPassword,
-} from './interfaces/user.interface';
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import {UserRepository} from './repositories/user.repository';
+import {PaginatedUsersInterface} from './interfaces/user.interface';
 import {User} from './entities/user.entity';
 import {UpdateUserDto} from './dto/update-user.dto';
 import {UserPaginatedDto} from './dto/user-paginated.dto';
-import {extractPayloadFromUser} from './constants/user.constant';
 import {hashPlainText} from '../common/constants/encryption.constant';
+import {UserRole} from './enum/user-role.enum';
 
 /**
  * 사용자 관련 비즈니스 로직을 처리하는 서비스입니다.
@@ -37,12 +38,8 @@ export class UserService {
       },
     });
 
-    const usersWithoutPassword: UserWithoutPassword[] = users.map(
-      (user: User): UserWithoutPassword => extractPayloadFromUser(user),
-    );
-
     return {
-      users: usersWithoutPassword,
+      users,
       pagination: {
         totalEntry,
         page,
@@ -64,25 +61,42 @@ export class UserService {
    * 사용자를 수정합니다.
    * @param {number} id - 수정할 사용자 ID
    * @param {UpdateUserDto} updateUserDto - 수정할 데이터
-   * @return {Promise<UserWithoutPassword>} - 수정된 사용자
+   * @param {User} currentUser - 현재 사용자
+   * @return {Promise<User>} - 수정된 사용자
    */
   async updateUser(
     id: number,
     updateUserDto: UpdateUserDto,
-  ): Promise<UserWithoutPassword> {
+    currentUser: User,
+  ): Promise<User> {
     const user = await this.getUserById(id);
-    if (!user) {
-      throw new NotFoundException('User not found.');
-    }
 
     if (updateUserDto.password) {
       updateUserDto.password = await hashPlainText(updateUserDto.password);
     }
 
-    Object.assign(user, updateUserDto);
-    const savedUser = await this.userRepository.save(user);
+    if (updateUserDto.email) {
+      if (!currentUser.roles.includes(UserRole.ADMIN)) {
+        throw new ForbiddenException('You are not allowed to change email.');
+      }
 
-    return extractPayloadFromUser(savedUser);
+      const emailExists = await this.userRepository.isEmailRegistered(
+        updateUserDto.email,
+      );
+
+      if (emailExists) {
+        throw new ConflictException(
+          'This email is already registered. Please use another email.',
+        );
+      }
+    }
+
+    if (updateUserDto.roles && !currentUser.roles.includes(UserRole.ADMIN)) {
+      throw new ForbiddenException('You are not allowed to change roles.');
+    }
+
+    Object.assign(user, updateUserDto);
+    return await this.userRepository.save(user);
   }
 
   /**
@@ -92,10 +106,6 @@ export class UserService {
    */
   async deleteUser(id: number): Promise<void> {
     const user = await this.getUserById(id);
-    if (!user) {
-      throw new NotFoundException('User not found.');
-    }
-
     await this.userRepository.remove(user);
   }
 }

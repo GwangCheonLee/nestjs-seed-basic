@@ -20,4 +20,8 @@ export class UpdateUserDto {
   @IsEnum(UserRole, {each: true})
   @IsOptional()
   roles?: UserRole[];
+
+  @IsString()
+  @IsOptional()
+  profileImage?: string;
 }

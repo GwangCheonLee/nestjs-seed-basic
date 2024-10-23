@@ -7,7 +7,7 @@ import {UserRepository} from '../../users/repositories/user.repository';
 import {JwtPayloadInterface} from '../interfaces/jwt-payload.interface';
 import {User} from '../../users/entities/user.entity';
 import {compareWithHash} from '../../common/constants/encryption.constant';
-import {RedisService} from '../../common/redis/redis.service';
+import {RedisService} from '../../redis/redis.service';
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(

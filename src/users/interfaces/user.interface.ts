@@ -1,4 +1,4 @@
-import {UserRole} from '../enum/user-role.enum';
+import {UserWithoutPassword} from '../types/user.type';
 
 /**
  * 페이지네이션 정보를 포함한 사용자 목록을 반환하는 인터페이스입니다.
@@ -11,16 +11,4 @@ export interface PaginatedUsersInterface {
     page: number;
     limit: number;
   };
-}
-
-/**
- * 비밀번호를 제외한 사용자 정보를 나타내는 인터페이스입니다.
- */
-export interface UserWithoutPassword {
-  id: number;
-  email: string;
-  nickname: string;
-  roles: UserRole[];
-  createdAt: Date;
-  updatedAt: Date;
 }

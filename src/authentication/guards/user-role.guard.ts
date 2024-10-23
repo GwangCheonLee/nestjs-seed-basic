@@ -1,39 +1,32 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
-import {Reflector} from '@nestjs/core';
-import {JwtPayloadInterface} from '../interfaces/jwt-payload.interface';
+import {CanActivate, ExecutionContext, mixin, Type} from '@nestjs/common';
 import {UserRole} from '../../users/enum/user-role.enum';
-import {USER_ROLES_KEY} from '../decorators/user-roles.decorator';
+import {User} from '../../users/entities/user.entity';
+import RequestWithUser from '../../common/interfaces/request-with-user.interface';
 
-@Injectable()
-export class UserRoleGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+/**
+ * UserRoleGuard는 사용자가 특정 권한을 가지고 있는지 확인하는 가드입니다.
+ *
+ * @param {UserRole[]} roles - 허용된 사용자 역할 목록
+ * @return {Type<CanActivate>} - 권한을 확인하는 가드 클래스
+ */
+const UserRoleGuard = (roles: UserRole[]): Type<CanActivate> => {
+  class UserRoleGuardMixin implements CanActivate {
+    /**
+     * 사용자의 역할이 허용된 역할 목록에 있는지 확인합니다.
+     *
+     * @param {ExecutionContext} context - 요청의 실행 컨텍스트
+     * @return {boolean} - 사용자가 허용된 역할을 가지고 있는지 여부
+     */
+    canActivate(context: ExecutionContext): boolean {
+      const request = context.switchToHttp().getRequest<RequestWithUser>();
+      const user: User = request.user;
 
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
-      USER_ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-
-    if (!requiredRoles) {
-      return true;
+      // 사용자의 역할이 허용된 역할 목록에 있는지 확인
+      return roles.some((role) => user?.roles.includes(role));
     }
-
-    const request = context.switchToHttp().getRequest();
-    const user: JwtPayloadInterface = request.user;
-
-    const hasRole = requiredRoles.some((role) => user.roles.includes(role));
-
-    if (!hasRole) {
-      throw new ForbiddenException(
-        'You do not have permission to access this resource.',
-      );
-    }
-
-    return true;
   }
-}
+
+  return mixin(UserRoleGuardMixin);
+};
+
+export default UserRoleGuard;

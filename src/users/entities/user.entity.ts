@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import {IsEmail} from 'class-validator';
 import {UserRole} from '../enum/user-role.enum';
+import {Exclude} from 'class-transformer';
 
 /**
  * User Entity
@@ -16,15 +17,22 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({name: 'oauth_provider', nullable: true})
+  oauthProvider?: string | null;
+
   @Column({name: 'email', unique: true})
   @IsEmail()
   email: string;
 
-  @Column({name: 'password'})
-  password: string;
+  @Exclude()
+  @Column({name: 'password', nullable: true})
+  password?: string | null;
 
   @Column({name: 'nickname'})
   nickname: string;
+
+  @Column({name: 'profile_image', nullable: true})
+  profileImage?: string | null;
 
   @Column({
     type: 'enum',
@@ -33,6 +41,9 @@ export class User {
     array: true,
   })
   roles: UserRole[];
+
+  @Column({name: 'is_active', default: true})
+  isActive: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

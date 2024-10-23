@@ -21,12 +21,12 @@ export class UserRepository extends Repository<User> {
    * @param {string} nickname - 사용자의 닉네임
    * @return {Promise<User>} - 생성된 사용자 엔터티
    */
-  async signUp(
+  signUp(
     email: string,
     hashedPassword: string,
     nickname: string,
   ): Promise<User> {
-    return await this.save({
+    return this.save({
       email: email,
       password: hashedPassword,
       nickname: nickname,

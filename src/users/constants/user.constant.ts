@@ -1,5 +1,5 @@
 import {User} from '../entities/user.entity';
-import {UserWithoutPassword} from '../interfaces/user.interface';
+import {UserWithoutPassword} from '../types/user.type';
 
 /**
  * 유저 정보를 인증된 사용자 정보로 변환합니다.
@@ -10,12 +10,6 @@ import {UserWithoutPassword} from '../interfaces/user.interface';
 export const extractPayloadFromUser: (user: User) => UserWithoutPassword = (
   user: User,
 ): UserWithoutPassword => {
-  return {
-    id: user.id,
-    nickname: user.nickname,
-    email: user.email,
-    roles: user.roles,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  };
+  const {password, ...userWithoutPassword} = user;
+  return userWithoutPassword;
 };

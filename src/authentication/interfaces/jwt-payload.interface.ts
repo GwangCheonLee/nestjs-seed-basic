@@ -1,4 +1,4 @@
-import {UserWithoutPassword} from '../../users/interfaces/user.interface';
+import {UserWithoutPassword} from '../../users/types/user.type';
 import {UserRole} from '../../users/enum/user-role.enum';
 
 /**

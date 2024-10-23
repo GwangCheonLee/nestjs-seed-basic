@@ -6,9 +6,9 @@ import {JwtService} from '@nestjs/jwt';
 import {ConfigService} from '@nestjs/config';
 import {SignUpRequestBodyDto} from './dto/sign-up-request-body.dto';
 import {getPackageJsonField} from '../common/utils/package-info.util';
-import {RedisService} from '../common/redis/redis.service';
-import {UserWithoutPassword} from '../users/interfaces/user.interface';
+import {RedisService} from '../redis/redis.service';
 import {extractPayloadFromUser} from '../users/constants/user.constant';
+import {UserWithoutPassword} from '../users/types/user.type';
 
 @Injectable()
 export class AuthenticationService {
@@ -32,7 +32,7 @@ export class AuthenticationService {
    * @return {Promise<string>} - 생성된 accessToken
    */
   async generateAccessToken(user: User): Promise<string> {
-    const accessTokenExpirationTime: string = this.configService.get(
+    const accessTokenExpirationTime: number = this.configService.get<number>(
       'JWT_ACCESS_TOKEN_EXPIRATION_TIME',
     );
 
@@ -43,7 +43,7 @@ export class AuthenticationService {
       },
       {
         secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
-        expiresIn: `${accessTokenExpirationTime}m`,
+        expiresIn: `${accessTokenExpirationTime}s`,
         issuer: getPackageJsonField('name'),
         audience: user.email,
         algorithm: 'HS256',
@@ -64,7 +64,7 @@ export class AuthenticationService {
    * @return {Promise<string>} - 생성된 refreshToken
    */
   async generateRefreshToken(user: User): Promise<string> {
-    const refreshTokenExpirationTime: string = this.configService.get(
+    const refreshTokenExpirationTime: number = this.configService.get<number>(
       'JWT_REFRESH_TOKEN_EXPIRATION_TIME',
     );
 
@@ -75,7 +75,7 @@ export class AuthenticationService {
       },
       {
         secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
-        expiresIn: `${refreshTokenExpirationTime}d`,
+        expiresIn: `${refreshTokenExpirationTime}s`,
         issuer: getPackageJsonField('name'),
         audience: user.email,
         algorithm: 'HS256',
@@ -110,29 +110,12 @@ export class AuthenticationService {
 
     const hashedPassword = await hashPlainText(signUpRequestBodyDto.password);
 
-    const user = await this.userRepository.signUp(
+    const user: User = await this.userRepository.signUp(
       signUpRequestBodyDto.email,
       hashedPassword,
       signUpRequestBodyDto.nickname,
     );
 
     return extractPayloadFromUser(user);
-  }
-
-  /**
-   * 로그인 로직으로 accessToken과 refreshToken을 생성하고 반환합니다.
-   *
-   * @param {User} user - Local 가드를 통과한 유저
-   * @return {Promise<Object>} - 액세스 토큰과 리프레시 토큰이 포함된 객체
-   * @return {Promise<string>} returns.accessToken - 생성된 액세스 토큰
-   * @return {Promise<string>} returns.refreshToken - 생성된 리프레시 토큰
-   */
-  async signIn(
-    user: User,
-  ): Promise<{accessToken: string; refreshToken: string}> {
-    return {
-      accessToken: await this.generateAccessToken(user),
-      refreshToken: await this.generateRefreshToken(user),
-    };
   }
 }
