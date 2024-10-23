@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common';
 import {ConfigService} from '@nestjs/config';
 import {RedisRepository} from './redis.repository';
-import {hashPlainText} from '../constants/encryption.constant';
+import {hashPlainText} from '../common/constants/encryption.constant';
 import {
   userAccessTokenKey,
   userRefreshTokenKey,
@@ -40,7 +40,7 @@ export class RedisService {
    * @return {Promise<void>} - 데이터 저장이 완료되면 반환되는 Promise
    */
   async setUserAccessToken(userId: number, accessToken: string): Promise<void> {
-    const accessTokenExpirationTime: string = this.configService.get(
+    const accessTokenExpirationTime: number = this.configService.get<number>(
       'JWT_ACCESS_TOKEN_EXPIRATION_TIME',
     );
 
@@ -48,7 +48,7 @@ export class RedisService {
     await this.redisRepository.set(
       userAccessTokenKey(userId),
       hashedAccessToken,
-      Number(accessTokenExpirationTime) * 60,
+      accessTokenExpirationTime,
     );
   }
 
@@ -63,7 +63,7 @@ export class RedisService {
     userId: number,
     refreshToken: string,
   ): Promise<void> {
-    const refreshTokenExpirationTime: string = this.configService.get(
+    const refreshTokenExpirationTime: number = this.configService.get<number>(
       'JWT_REFRESH_TOKEN_EXPIRATION_TIME',
     );
 
@@ -71,7 +71,7 @@ export class RedisService {
     await this.redisRepository.set(
       userRefreshTokenKey(userId),
       hashedAccessToken,
-      Number(refreshTokenExpirationTime) * 60 * 60 * 24,
+      refreshTokenExpirationTime,
     );
   }
 }
