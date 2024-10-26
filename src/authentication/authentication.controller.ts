@@ -1,5 +1,15 @@
 import {Response} from 'express';
-import {Body, Controller, HttpCode, Post, Res, UseGuards} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import {LocalGuard} from './guards/local.guard';
 import {AuthenticationService} from './authentication.service';
 import {SignUpRequestBodyDto} from './dto/sign-up-request-body.dto';
@@ -9,6 +19,8 @@ import {SignInResponse} from './interfaces/authentication.interface';
 import {JwtRefreshGuard} from './guards/jwt-refresh.guard';
 import {ConfigService} from '@nestjs/config';
 import {UserWithoutPassword} from '../users/types/user.type';
+import {GoogleGuard} from './guards/google.guard';
+import RequestWithUser from '../common/interfaces/request-with-user.interface';
 
 @Controller({version: '1', path: 'authentication'})
 export class AuthenticationController {
@@ -80,5 +92,63 @@ export class AuthenticationController {
   async getAccessToken(@GetUser() user: User): Promise<SignInResponse> {
     const accessToken = await this.authService.generateAccessToken(user);
     return {accessToken};
+  }
+
+  /**
+   * Google 로그인 페이지로 리디렉션하는 엔드포인트입니다.
+   * 사용자가 이 엔드포인트에 접근하면 Google 로그인 화면으로 이동합니다.
+   */
+  @Get('/google/sign-in')
+  @UseGuards(GoogleGuard)
+  async loginGoogle() {}
+
+  /**
+   * Google 로그인 성공 후 Google에서 콜백하는 엔드포인트입니다.
+   * Google 인증이 완료되면 사용자 정보를 반환하고, Access Token과 Refresh Token을 발급합니다.
+   *
+   * @param {RequestWithUser} req - Google 인증 후 반환된 사용자 정보가 포함된 요청 객체
+   * @param {Response} res - 응답 객체, 클라이언트로 리다이렉트하거나 HttpOnly 쿠키를 설정합니다.
+   * @param {state} state - Google 로그인 요청 시 Front Redirect URL
+   * @return {Promise<SignInResponse>} - Access Token을 포함한 응답
+   */
+  @Get('/google/callback')
+  @UseGuards(GoogleGuard)
+  async googleAuthCallback(
+    @Req() req: RequestWithUser,
+    @Res() res: Response,
+    @Query('state') state: string,
+  ): Promise<void> {
+    const googleAuthBaseRedirectUrl = this.configService.get<string>(
+      'GOOGLE_AUTH_BASE_REDIRECT_URL',
+    );
+    const googleUser: Partial<User> = req.user; // 구글 인증된 사용자 정보
+
+    // 구글 로그인 또는 회원가입 후 사용자 정보 반환
+    const authenticatedUser = await this.authService.googleSignIn(googleUser);
+
+    // Access Token 및 Refresh Token 발급
+    const accessToken =
+      await this.authService.generateAccessToken(authenticatedUser);
+    const refreshToken =
+      await this.authService.generateRefreshToken(authenticatedUser);
+
+    const refreshTokenExpirationTime: number = this.configService.get<number>(
+      'JWT_REFRESH_TOKEN_EXPIRATION_TIME',
+    );
+
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+
+    // Refresh Token을 HttpOnly 쿠키로 설정
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: refreshTokenExpirationTime,
+      path: '/',
+    });
+
+    return res.redirect(
+      `${state || googleAuthBaseRedirectUrl}?accessToken=${accessToken}`,
+    );
   }
 }

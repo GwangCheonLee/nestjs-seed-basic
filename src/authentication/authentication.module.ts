@@ -6,6 +6,7 @@ import {UserRepository} from '../users/repositories/user.repository';
 import {JwtModule} from '@nestjs/jwt';
 import {JwtAccessStrategy} from './strategy/jwt-access.strategy';
 import {JwtRefreshStrategy} from './strategy/jwt-refresh.strategy';
+import {GoogleStrategy} from './strategy/google.strategy';
 
 /**
  * Authentication 모듈은 사용자 인증과 관련된 모든 기능을 담당하는 모듈입니다.
@@ -20,6 +21,7 @@ import {JwtRefreshStrategy} from './strategy/jwt-refresh.strategy';
     LocalStrategy,
     JwtAccessStrategy,
     JwtRefreshStrategy,
+    GoogleStrategy,
     UserRepository,
   ],
 })

@@ -118,4 +118,30 @@ export class AuthenticationService {
 
     return extractPayloadFromUser(user);
   }
+
+  /**
+   * Google 인증된 사용자 정보를 통해 로그인 또는 회원가입을 처리합니다.
+   *
+   * @param {Partial<User>} user - Google 인증된 사용자 정보
+   * @return {Promise<User>} - 인증된 사용자 정보 반환
+   */
+  async googleSignIn(user: Partial<User>): Promise<User> {
+    // 이메일로 기존 회원 확인
+    const registeredUser = await this.userRepository.isEmailRegistered(
+      user.email,
+    );
+
+    if (!registeredUser) {
+      // 새 사용자 등록 후 반환
+      return this.userRepository.save({
+        oauthProvider: user.oauthProvider,
+        email: user.email,
+        nickname: user.nickname,
+        profileImage: user.profileImage,
+      });
+    } else {
+      // 기존 사용자 반환
+      return this.userRepository.findUserByEmail(user.email);
+    }
+  }
 }

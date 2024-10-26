@@ -50,6 +50,25 @@ export class UserRepository extends Repository<User> {
   }
 
   /**
+   * 주어진 이메일로 사용자를 찾습니다.
+   *
+   * @param {string} email - 찾을 사용자의 이메일
+   * @throws {NotFoundException} - 사용자를 찾을 수 없는 경우 예외 발생
+   * @return {Promise<User>} - 조회된 사용자 반환
+   */
+  async findUserByEmail(email: string): Promise<User> {
+    const user = await this.createQueryBuilder('user')
+      .where('user.email = :email', {email})
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found.`);
+    }
+
+    return user;
+  }
+
+  /**
    * 사용자 자격 증명을 확인합니다.
    *
    * @param {string} email - 사용자의 이메일
