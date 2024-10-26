@@ -37,5 +37,9 @@ export const validationSchemaConfig = (): Joi.ObjectSchema => {
     JWT_ACCESS_TOKEN_EXPIRATION_TIME: Joi.number().required(),
     JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
     JWT_REFRESH_TOKEN_EXPIRATION_TIME: Joi.number().required(),
+    GOOGLE_AUTH_CLIENT_ID: Joi.string().required(),
+    GOOGLE_AUTH_CLIENT_SECRET: Joi.string().required(),
+    GOOGLE_AUTH_CALLBACK_URL: Joi.string().required(),
+    GOOGLE_AUTH_BASE_REDIRECT_URL: Joi.string().required(),
   });
 };
