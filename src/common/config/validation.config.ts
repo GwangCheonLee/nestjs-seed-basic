@@ -41,5 +41,6 @@ export const validationSchemaConfig = (): Joi.ObjectSchema => {
     GOOGLE_AUTH_CLIENT_SECRET: Joi.string().required(),
     GOOGLE_AUTH_CALLBACK_URL: Joi.string().required(),
     GOOGLE_AUTH_BASE_REDIRECT_URL: Joi.string().required(),
+    TWO_FACTOR_AUTHENTICATION_APP_NAME: Joi.string().required(),
   });
 };

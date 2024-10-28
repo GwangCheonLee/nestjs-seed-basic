@@ -25,7 +25,7 @@ import RequestWithUser from '../common/interfaces/request-with-user.interface';
 @Controller({version: '1', path: 'authentication'})
 export class AuthenticationController {
   constructor(
-    private readonly authService: AuthenticationService,
+    private readonly authenticationService: AuthenticationService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -39,7 +39,7 @@ export class AuthenticationController {
   async signUp(
     @Body() signUpDto: SignUpRequestBodyDto,
   ): Promise<UserWithoutPassword> {
-    return this.authService.signUp(signUpDto);
+    return this.authenticationService.signUp(signUpDto);
   }
 
   /**
@@ -60,8 +60,10 @@ export class AuthenticationController {
     @Res({passthrough: true}) res: Response,
   ): Promise<SignInResponse> {
     // Access Token, Refresh Token 생성
-    const accessToken = await this.authService.generateAccessToken(user);
-    const refreshToken = await this.authService.generateRefreshToken(user);
+    const accessToken =
+      await this.authenticationService.generateAccessToken(user);
+    const refreshToken =
+      await this.authenticationService.generateRefreshToken(user);
 
     const refreshTokenExpirationTime: number = this.configService.get(
       'JWT_REFRESH_TOKEN_EXPIRATION_TIME',
@@ -90,7 +92,8 @@ export class AuthenticationController {
   @UseGuards(JwtRefreshGuard)
   @HttpCode(200)
   async getAccessToken(@GetUser() user: User): Promise<SignInResponse> {
-    const accessToken = await this.authService.generateAccessToken(user);
+    const accessToken =
+      await this.authenticationService.generateAccessToken(user);
     return {accessToken};
   }
 
@@ -124,13 +127,14 @@ export class AuthenticationController {
     const googleUser: Partial<User> = req.user; // 구글 인증된 사용자 정보
 
     // 구글 로그인 또는 회원가입 후 사용자 정보 반환
-    const authenticatedUser = await this.authService.googleSignIn(googleUser);
+    const authenticatedUser =
+      await this.authenticationService.googleSignIn(googleUser);
 
     // Access Token 및 Refresh Token 발급
     const accessToken =
-      await this.authService.generateAccessToken(authenticatedUser);
+      await this.authenticationService.generateAccessToken(authenticatedUser);
     const refreshToken =
-      await this.authService.generateRefreshToken(authenticatedUser);
+      await this.authenticationService.generateRefreshToken(authenticatedUser);
 
     const refreshTokenExpirationTime: number = this.configService.get<number>(
       'JWT_REFRESH_TOKEN_EXPIRATION_TIME',
