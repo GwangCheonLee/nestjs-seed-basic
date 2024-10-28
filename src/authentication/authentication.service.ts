@@ -9,6 +9,10 @@ import {getPackageJsonField} from '../common/utils/package-info.util';
 import {RedisService} from '../redis/redis.service';
 import {extractPayloadFromUser} from '../users/constants/user.constant';
 import {UserWithoutPassword} from '../users/types/user.type';
+import {toFileStream} from 'qrcode';
+import {Response} from 'express';
+import {authenticator} from 'otplib';
+import {Binary} from 'typeorm';
 
 @Injectable()
 export class AuthenticationService {
@@ -143,5 +147,43 @@ export class AuthenticationService {
       // 기존 사용자 반환
       return this.userRepository.findUserByEmail(user.email);
     }
+  }
+
+  /**
+   * 사용자의 2단계 인증 비밀키를 생성합니다.
+   * @param {User} user - 2단계 인증을 설정할 사용자
+   * @return {Promise<{secret: string, otpauthUrl: string}>} - 생성된 비밀키와 OTP URL
+   */
+  async generateTwoFactorAuthenticationSecret(
+    user: User,
+  ): Promise<{secret: string; otpauthUrl: string}> {
+    const secret = authenticator.generateSecret();
+
+    const otpauthUrl = authenticator.keyuri(
+      user.email,
+      this.configService.get('TWO_FACTOR_AUTHENTICATION_APP_NAME'),
+      secret,
+    );
+
+    await this.userRepository.setTwoFactorAuthenticationSecret(secret, user.id);
+
+    return {
+      secret,
+      otpauthUrl,
+    };
+  }
+
+  /**
+   * 2단계 인증 QR 코드를 생성합니다.
+   *
+   * @param {Response} stream - HTTP 응답 객체
+   * @param {string} otpauthUrl - OTP URL
+   * @return {Promise<Binary>} - QR 코드를 반환합니다.
+   */
+  async pipeQrCodeStream(
+    stream: Response,
+    otpauthUrl: string,
+  ): Promise<Binary> {
+    return toFileStream(stream, otpauthUrl);
   }
 }

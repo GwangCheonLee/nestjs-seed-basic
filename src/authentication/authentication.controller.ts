@@ -21,6 +21,8 @@ import {ConfigService} from '@nestjs/config';
 import {UserWithoutPassword} from '../users/types/user.type';
 import {GoogleGuard} from './guards/google.guard';
 import RequestWithUser from '../common/interfaces/request-with-user.interface';
+import {JwtAccessGuard} from './guards/jwt-access.guard';
+import {Binary} from 'typeorm';
 
 @Controller({version: '1', path: 'authentication'})
 export class AuthenticationController {
@@ -154,5 +156,29 @@ export class AuthenticationController {
     return res.redirect(
       `${state || googleAuthBaseRedirectUrl}?accessToken=${accessToken}`,
     );
+  }
+
+  /**
+   * 2단계 인증 QR 코드를 생성하는 엔드포인트입니다.
+   * 사용자가 QR 코드를 스캔하여 2단계 인증을 활성화할 수 있습니다.
+   *
+   * @param {RequestWithUser} request - 요청 객체, 사용자 정보를 포함합니다.
+   * @param {Response} response - HTTP 응답 객체
+   * @return {Promise<void>} - QR 코드를 반환합니다.
+   */
+  @Post('/2fa/generate')
+  @HttpCode(200)
+  @UseGuards(JwtAccessGuard)
+  async generateTwoFactorAuthenticationQrCode(
+    @Req() request: RequestWithUser,
+    @Res() response: Response,
+  ): Promise<Binary> {
+    const {otpauthUrl} =
+      await this.authenticationService.generateTwoFactorAuthenticationSecret(
+        request.user,
+      );
+
+    response.setHeader('Content-Type', 'image/png');
+    return this.authenticationService.pipeQrCodeStream(response, otpauthUrl);
   }
 }
