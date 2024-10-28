@@ -108,4 +108,13 @@ export class UserService {
     const user = await this.getUserById(id);
     await this.userRepository.remove(user);
   }
+
+  /**
+   * 주어진 사용자 ID에 대해 유저를 반환합니다.
+   * @param {number} id - 조회할 사용자 ID
+   * @return {Promise<User>} - 조회된 사용자
+   */
+  async findByUserForTwoFactorEnabled(id: number): Promise<User> {
+    return this.userRepository.findUserById(id);
+  }
 }
