@@ -1,4 +1,4 @@
-import {DataSource, Repository} from 'typeorm';
+import {DataSource, Repository, UpdateResult} from 'typeorm';
 import {
   Injectable,
   NotFoundException,
@@ -117,5 +117,20 @@ export class UserRepository extends Repository<User> {
     }
 
     return user;
+  }
+
+  /**
+   * 사용자의 2단계 인증 비밀키를 설정합니다.
+   * @param {string} secret - 2단계 인증 비밀키
+   * @param {number} userId - 사용자 ID
+   * @return {Promise<UpdateResult>} - 업데이트 결과
+   */
+  setTwoFactorAuthenticationSecret(
+    secret: string,
+    userId: number,
+  ): Promise<UpdateResult> {
+    return this.update(userId, {
+      twoFactorAuthenticationSecret: secret,
+    });
   }
 }
