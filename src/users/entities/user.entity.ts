@@ -42,6 +42,9 @@ export class User {
   })
   roles: UserRole[];
 
+  @Column({name: 'two_factor_authentication_secret', nullable: true})
+  twoFactorAuthenticationSecret?: string | null;
+
   @Column({name: 'is_active', default: true})
   isActive: boolean;
 
