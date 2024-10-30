@@ -1,6 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import {Test, TestingModule} from '@nestjs/testing';
+import {AppController} from './app.controller';
+import {AppService} from './app.service';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -21,6 +21,12 @@ describe('AppController', () => {
   describe('Health check controller', () => {
     it('should return an empty string', () => {
       expect(appController.getHealth()).toBe('');
+    });
+  });
+
+  describe('ping', () => {
+    it('should return pong string', () => {
+      expect(appController.ping()).toBe('pong');
     });
   });
 });
