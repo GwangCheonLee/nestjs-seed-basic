@@ -1,5 +1,4 @@
 import {Module} from '@nestjs/common';
-import {JwtModule} from '@nestjs/jwt';
 import {UserController} from './user.controller';
 import {UserService} from './user.service';
 import {UserRepository} from './repositories/user.repository';
@@ -9,7 +8,6 @@ import {UserRepository} from './repositories/user.repository';
  * @module UserModule
  */
 @Module({
-  imports: [JwtModule],
   controllers: [UserController],
   providers: [UserService, UserRepository],
 })
