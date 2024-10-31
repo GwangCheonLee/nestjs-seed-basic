@@ -20,7 +20,6 @@ export const validationPipeConfig = (): ValidationPipe => {
 export const validationSchemaConfig = (): Joi.ObjectSchema => {
   return Joi.object({
     TZ: Joi.string().default('UTC'),
-    APPLICATION_ENV: Joi.string().required(),
     SERVER_PORT: Joi.number().default(3000),
     API_PREFIX: Joi.string().default('api'),
     LIMIT_CONCURRENT_LOGIN: Joi.boolean().default(false),
