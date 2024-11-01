@@ -32,6 +32,10 @@ describe('UserRepository', () => {
     userRepository = module.get<UserRepository>(UserRepository);
   });
 
+  afterEach(async () => {
+    await userRepository.clear();
+  });
+
   // eslint-disable-next-line require-jsdoc
   const createTestUser = async (
     email: string,
