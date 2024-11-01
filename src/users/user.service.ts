@@ -71,8 +71,10 @@ export class UserService {
   ): Promise<User> {
     const user = await this.getUserById(id);
 
+    const updatedFields: Partial<User> = {...updateUserDto};
+
     if (updateUserDto.password) {
-      updateUserDto.password = await hashPlainText(updateUserDto.password);
+      updatedFields.password = await hashPlainText(updateUserDto.password);
     }
 
     if (updateUserDto.email) {
@@ -83,7 +85,6 @@ export class UserService {
       const emailExists = await this.userRepository.isEmailRegistered(
         updateUserDto.email,
       );
-
       if (emailExists) {
         throw new ConflictException(
           'This email is already registered. Please use another email.',
@@ -95,8 +96,12 @@ export class UserService {
       throw new ForbiddenException('You are not allowed to change roles.');
     }
 
-    Object.assign(user, updateUserDto);
-    return await this.userRepository.save(user);
+    const updatedUser = this.userRepository.create({
+      ...user,
+      ...updatedFields,
+    });
+
+    return await this.userRepository.save(updatedUser);
   }
 
   /**
@@ -115,6 +120,6 @@ export class UserService {
    * @return {Promise<User>} - 조회된 사용자
    */
   async findByUserForTwoFactorEnabled(id: number): Promise<User> {
-    return this.userRepository.findUserById(id);
+    return this.userRepository.findOneBy({id});
   }
 }
