@@ -1,12 +1,14 @@
-import {Test, TestingModule} from '@nestjs/testing';
+import {UserPaginatedDto} from './dto/user-paginated.dto';
 import {DataSource} from 'typeorm';
 import {UserService} from './user.service';
 import {UserRepository} from './repositories/user.repository';
-import {User} from './entities/user.entity';
-import {TypeOrmModule} from '@nestjs/typeorm';
 import {setupDataSource} from '../../jest/setup';
+import {Test, TestingModule} from '@nestjs/testing';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {User} from './entities/user.entity';
 import {UserRole} from './enum/user-role.enum';
-import {UserPaginatedDto} from './dto/user-paginated.dto';
+import {UpdateUserDto} from './dto/update-user.dto';
+import {ConflictException, ForbiddenException} from '@nestjs/common';
 
 describe('UserService with pg-mem', () => {
   let dataSource: DataSource;
@@ -38,13 +40,16 @@ describe('UserService with pg-mem', () => {
     await userRepository.clear();
   });
 
-  // eslint-disable-next-line require-jsdoc
-  const createTestUser = async (email: string, nickname: string) => {
+  const createTestUser = async (
+    email: string,
+    nickname: string,
+    roles: UserRole[] = [UserRole.USER],
+  ) => {
     return await userRepository.save({
       email,
       password: 'password',
       nickname,
-      roles: [UserRole.USER],
+      roles,
     });
   };
 
@@ -118,6 +123,83 @@ describe('UserService with pg-mem', () => {
       expect(result.pagination.limit).toBe(1);
       expect(result.pagination.totalEntry).toBe(3);
       expect(result.users[0].nickname).toBe('User Two');
+    });
+  });
+
+  describe('getUserById', () => {
+    it('should return user by ID', async () => {
+      const user = await createTestUser('testUser@example.com', 'Test User');
+      const result = await userService.getUserById(user.id);
+
+      expect(result).toBeDefined();
+      expect(result.email).toBe('testUser@example.com');
+    });
+  });
+
+  describe('updateUser', () => {
+    it('should update user details successfully', async () => {
+      const user = await createTestUser('testUser@example.com', 'Test User');
+      const updateUserDto: UpdateUserDto = {nickname: 'Updated User'};
+
+      const updatedUser = await userService.updateUser(
+        user.id,
+        updateUserDto,
+        user,
+      );
+
+      expect(updatedUser).toBeDefined();
+      expect(updatedUser.nickname).toBe('Updated User');
+    });
+
+    it('should throw ForbiddenException when non-admin tries to change email', async () => {
+      const user = await createTestUser('testUser@example.com', 'Test User');
+      const nonAdminUser = {...user, roles: [UserRole.USER]} as User;
+      const updateUserDto: UpdateUserDto = {email: 'newemail@example.com'};
+
+      await expect(
+        userService.updateUser(user.id, updateUserDto, nonAdminUser),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ConflictException if the new email is already registered', async () => {
+      await createTestUser('existing@example.com', 'Existing User');
+      const user = await createTestUser('testUser@example.com', 'Test User', [
+        UserRole.ADMIN,
+      ]);
+      const updateUserDto: UpdateUserDto = {email: 'existing@example.com'};
+
+      await expect(
+        userService.updateUser(user.id, updateUserDto, user),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('should delete a user successfully', async () => {
+      const user = await createTestUser('testUser@example.com', 'Test User');
+      await userService.deleteUser(user.id);
+
+      const foundUser = await userRepository.findOneBy({id: user.id});
+      expect(foundUser).toBeNull();
+    });
+  });
+
+  describe('findByUserForTwoFactorEnabled', () => {
+    it('should return user for two-factor authentication by ID', async () => {
+      const user = await createTestUser(
+        'twofactor@example.com',
+        'Two Factor User',
+      );
+      const result = await userService.findByUserForTwoFactorEnabled(user.id);
+
+      expect(result).toBeDefined();
+      expect(result.email).toBe('twofactor@example.com');
+    });
+
+    it('should return null if user is not found', async () => {
+      const result = await userService.findByUserForTwoFactorEnabled(999);
+
+      expect(result).toBeNull();
     });
   });
 });
