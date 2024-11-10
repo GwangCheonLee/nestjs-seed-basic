@@ -26,6 +26,10 @@ describe('RedisRepository', () => {
     await redisClient.quit();
   });
 
+  afterEach(async () => {
+    await redisClient.flushall();
+  });
+
   it('should set and get a value in Redis', async () => {
     const key = 'testKey';
     const value = {data: 'testData'};
@@ -34,6 +38,20 @@ describe('RedisRepository', () => {
     const result = await redisRepository.get<typeof value>(key);
 
     expect(result).toEqual(value);
+  });
+
+  it('should set a value with TTL in Redis', async () => {
+    const key = 'testKeyWithTTL';
+    const value = {data: 'testData'};
+    const ttl = 60;
+
+    await redisRepository.set(key, value, ttl);
+    const result = await redisRepository.get<typeof value>(key);
+
+    expect(result).toEqual(value);
+
+    const ttlResult = await redisClient.ttl(key);
+    expect(ttlResult).toBeGreaterThan(0);
   });
 
   it('should delete a value from Redis', async () => {
@@ -53,10 +71,14 @@ describe('RedisRepository', () => {
 
     await redisRepository.set(key, value);
     const exists = await redisRepository.exists(key);
-    const notExists = await redisRepository.exists('nonExistentKey');
 
     expect(exists).toBe(true);
-    expect(notExists).toBe(false);
+  });
+
+  it('should return false when key does not exist in Redis', async () => {
+    const exists = await redisRepository.exists('nonExistentKey');
+
+    expect(exists).toBe(false);
   });
 
   it('should set and get a hash value in Redis', async () => {
@@ -68,6 +90,14 @@ describe('RedisRepository', () => {
     const result = await redisRepository.hget(key, field);
 
     expect(result).toEqual(value);
+  });
+
+  it('should return null when hget is called on non-existing key or field', async () => {
+    const result = await redisRepository.hget(
+      'nonExistingKey',
+      'nonExistingField',
+    );
+    expect(result).toBeNull();
   });
 
   it('should delete a field from a hash in Redis', async () => {
