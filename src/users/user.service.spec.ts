@@ -9,6 +9,7 @@ import {User} from './entities/user.entity';
 import {UserRole} from './enum/user-role.enum';
 import {UpdateUserDto} from './dto/update-user.dto';
 import {ConflictException, ForbiddenException} from '@nestjs/common';
+import {compareWithHash} from '../common/constants/encryption.constant';
 
 describe('UserService with pg-mem', () => {
   let dataSource: DataSource;
@@ -171,6 +172,69 @@ describe('UserService with pg-mem', () => {
       await expect(
         userService.updateUser(user.id, updateUserDto, user),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('should update the password successfully', async () => {
+      const user = await createTestUser('testUser@example.com', 'Test User');
+      const updateUserDto: UpdateUserDto = {password: 'newpassword'};
+
+      const updatedUser = await userService.updateUser(
+        user.id,
+        updateUserDto,
+        user,
+      );
+
+      expect(updatedUser).toBeDefined();
+      expect(updatedUser.password).not.toBe(user.password);
+
+      const isPasswordMatch = await compareWithHash(
+        'newpassword',
+        updatedUser.password,
+      );
+      expect(isPasswordMatch).toBe(true);
+    });
+
+    it('should throw ForbiddenException when non-admin tries to change roles', async () => {
+      const user = await createTestUser('testUser@example.com', 'Test User');
+      const nonAdminUser = {...user, roles: [UserRole.USER]} as User;
+      const updateUserDto: UpdateUserDto = {roles: [UserRole.ADMIN]};
+
+      await expect(
+        userService.updateUser(user.id, updateUserDto, nonAdminUser),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should update roles when current user is admin', async () => {
+      const user = await createTestUser('testUser@example.com', 'Test User');
+      const adminUser = {...user, roles: [UserRole.ADMIN]} as User;
+      const updateUserDto: UpdateUserDto = {
+        roles: [UserRole.ADMIN, UserRole.USER],
+      };
+
+      const updatedUser = await userService.updateUser(
+        user.id,
+        updateUserDto,
+        adminUser,
+      );
+
+      expect(updatedUser).toBeDefined();
+      expect(updatedUser.roles).toEqual([UserRole.ADMIN, UserRole.USER]);
+    });
+
+    it('should update email when current user is admin and email is not registered', async () => {
+      const user = await createTestUser('testUser@example.com', 'Test User', [
+        UserRole.ADMIN,
+      ]);
+      const updateUserDto: UpdateUserDto = {email: 'newemail@example.com'};
+
+      const updatedUser = await userService.updateUser(
+        user.id,
+        updateUserDto,
+        user,
+      );
+
+      expect(updatedUser).toBeDefined();
+      expect(updatedUser.email).toBe('newemail@example.com');
     });
   });
 
