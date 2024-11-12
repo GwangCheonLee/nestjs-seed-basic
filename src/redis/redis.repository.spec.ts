@@ -1,13 +1,14 @@
 import {Test, TestingModule} from '@nestjs/testing';
-import Redis from 'ioredis-mock';
+import Redis from 'ioredis';
+import RedisMock from 'ioredis-mock';
 import {RedisRepository} from './redis.repository';
 
 describe('RedisRepository', () => {
   let redisRepository: RedisRepository;
-  let redisClient: typeof Redis;
+  let redisClient: Redis;
 
   beforeAll(async () => {
-    redisClient = new Redis();
+    redisClient = new RedisMock() as unknown as Redis;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

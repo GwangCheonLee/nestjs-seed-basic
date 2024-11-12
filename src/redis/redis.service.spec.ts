@@ -1,7 +1,8 @@
 import {Test, TestingModule} from '@nestjs/testing';
+import Redis from 'ioredis';
+import RedisMock from 'ioredis-mock';
 import {RedisService} from './redis.service';
 import {RedisRepository} from './redis.repository';
-import Redis from 'ioredis-mock';
 import {ConfigService} from '@nestjs/config';
 import {
   userAccessTokenKey,
@@ -14,10 +15,10 @@ jest.mock('../common/constants/encryption.constant');
 describe('RedisService', () => {
   let service: RedisService;
   let configService: jest.Mocked<ConfigService>;
-  let redisClient: typeof Redis;
+  let redisClient: Redis;
 
   beforeAll(async () => {
-    redisClient = new Redis();
+    redisClient = new RedisMock() as unknown as Redis;
   });
 
   beforeEach(async () => {
@@ -51,11 +52,11 @@ describe('RedisService', () => {
   });
 
   afterEach(async () => {
-    await redisClient.flushall(); // Clear the Redis database after each test
+    await redisClient.flushall();
   });
 
   afterAll(async () => {
-    await redisClient.quit(); // Close the Redis connection after all tests
+    await redisClient.quit();
   });
 
   describe('setUserAccessToken', () => {
@@ -63,7 +64,6 @@ describe('RedisService', () => {
       const userId = 1;
       const accessToken = 'testAccessToken';
 
-      // Mock hashPlainText to return a predictable hash
       const hashedAccessToken = 'hashedTestAccessToken';
       (hashPlainText as jest.Mock).mockResolvedValue(hashedAccessToken);
 
