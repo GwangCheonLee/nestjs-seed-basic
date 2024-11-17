@@ -17,6 +17,8 @@ describe('JwtRefreshStrategy', () => {
   let userRepository: jest.Mocked<UserRepository>;
   let redisService: jest.Mocked<RedisService>;
   let configService: jest.Mocked<ConfigService>;
+  let mockPayload: JwtPayloadInterface;
+  let mockUser: User;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -57,27 +59,75 @@ describe('JwtRefreshStrategy', () => {
     configService = module.get<ConfigService>(
       ConfigService,
     ) as jest.Mocked<ConfigService>;
+
+    mockUser = {
+      id: 1,
+      email: 'test@example.com',
+      nickname: 'testuser',
+      roles: [],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as User;
+
+    mockPayload = {
+      user: {
+        id: mockUser.id,
+        email: mockUser.email,
+        nickname: mockUser.nickname,
+        roles: mockUser.roles,
+        isActive: mockUser.isActive,
+        createdAt: mockUser.createdAt,
+        updatedAt: mockUser.updatedAt,
+      },
+    } as JwtPayloadInterface;
+  });
+
+  it('should extract refreshToken from request cookies', () => {
+    const jwtFromRequest = (jwtRefreshStrategy as any)._jwtFromRequest;
+
+    const reqWithToken = {cookies: {refreshToken: 'testToken'}} as any;
+    const token = jwtFromRequest(reqWithToken);
+    expect(token).toBe('testToken');
+
+    const reqWithoutCookies = {} as any;
+    const noToken = jwtFromRequest(reqWithoutCookies);
+    expect(noToken).toBeNull();
+
+    const reqWithoutToken = {cookies: {}} as any;
+    const nullToken = jwtFromRequest(reqWithoutToken);
+    expect(nullToken).toBeNull();
+  });
+
+  it('should throw UnauthorizedException if refreshToken is missing in cookies', async () => {
+    userRepository.findUserById.mockResolvedValue(mockUser);
+
+    await expect(
+      jwtRefreshStrategy.validate({cookies: {}} as any, mockPayload),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should throw UnauthorizedException if user is not found', async () => {
+    userRepository.findUserById.mockResolvedValue({id: 1} as User);
+
+    await expect(
+      jwtRefreshStrategy.validate(
+        {cookies: {refreshToken: 'mockRefreshToken'}} as any,
+        mockPayload,
+      ),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('should validate user without concurrent login restriction', async () => {
-    configService.get.mockImplementationOnce((key: string) => false);
-
-    const mockUser = {id: 1, email: 'test@example.com'} as User;
-    const mockPayload: JwtPayloadInterface = {
-      user: {
-        id: mockUser.id,
-        email: '',
-        nickname: '',
-        roles: [],
-        isActive: false,
-        createdAt: undefined,
-        updatedAt: undefined,
-      },
-    } as JwtPayloadInterface;
+    configService.get.mockImplementation((key: string) => {
+      if (key === 'JWT_REFRESH_TOKEN_SECRET') return 'refresh_secret';
+      if (key === 'LIMIT_CONCURRENT_LOGIN') return false; // 제한 해제
+      return null;
+    });
 
     userRepository.findUserById.mockResolvedValue(mockUser);
     redisService.getUserHashedRefreshToken.mockResolvedValue(
-      Promise.resolve('Redis Token'),
+      'hashedRefreshToken',
     );
     (compareWithHash as jest.Mock).mockResolvedValue(true);
 
@@ -90,18 +140,6 @@ describe('JwtRefreshStrategy', () => {
   });
 
   it('should validate user with correct token when concurrent login is limited', async () => {
-    const mockUser = {id: 1, email: 'test@example.com'} as User;
-    const mockPayload: JwtPayloadInterface = {
-      user: {
-        id: mockUser.id,
-        email: '',
-        nickname: '',
-        roles: [],
-        isActive: false,
-        createdAt: undefined,
-        updatedAt: undefined,
-      },
-    } as JwtPayloadInterface;
     const mockRefreshToken = 'mockRefreshToken';
     const hashedToken = 'hashedRefreshToken';
 
@@ -121,19 +159,6 @@ describe('JwtRefreshStrategy', () => {
   });
 
   it('should throw UnauthorizedException if token is missing in Redis', async () => {
-    const mockUser = {id: 1, email: 'test@example.com'} as User;
-    const mockPayload: JwtPayloadInterface = {
-      user: {
-        id: mockUser.id,
-        email: '',
-        nickname: '',
-        roles: [],
-        isActive: false,
-        createdAt: undefined,
-        updatedAt: undefined,
-      },
-    } as JwtPayloadInterface;
-
     userRepository.findUserById.mockResolvedValue(mockUser);
     redisService.getUserHashedRefreshToken.mockResolvedValue(null);
 
@@ -146,18 +171,6 @@ describe('JwtRefreshStrategy', () => {
   });
 
   it('should throw UnauthorizedException if token hash comparison fails', async () => {
-    const mockUser = {id: 1, email: 'test@example.com'} as User;
-    const mockPayload: JwtPayloadInterface = {
-      user: {
-        id: mockUser.id,
-        email: '',
-        nickname: '',
-        roles: [],
-        isActive: false,
-        createdAt: undefined,
-        updatedAt: undefined,
-      },
-    } as JwtPayloadInterface;
     const mockRefreshToken = 'mockRefreshToken';
     const hashedToken = 'hashedRefreshToken';
 
