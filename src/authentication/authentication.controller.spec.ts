@@ -11,6 +11,7 @@ import {JwtAccessGuard} from './guards/jwt-access.guard';
 import {GoogleGuard} from './guards/google.guard';
 import {LocalGuard} from './guards/local.guard';
 import {ExecutionContext, INestApplication} from '@nestjs/common';
+import * as request from 'supertest';
 
 describe('AuthenticationController', () => {
   let app: INestApplication;
@@ -293,6 +294,225 @@ describe('AuthenticationController', () => {
         response,
         otpauthUrl,
       );
+    });
+  });
+  describe('AuthenticationController 추가 테스트', () => {
+    describe('signUp 실패 케이스', () => {
+      it('should throw an error if signUp fails', async () => {
+        const signUpDto: SignUpRequestBodyDto = {
+          email: 'test@example.com',
+          password: 'password123',
+          nickname: 'testUser',
+        };
+
+        authenticationService.signUp.mockRejectedValueOnce(
+          new Error('Failed to sign up'),
+        );
+
+        await expect(controller.signUp(signUpDto)).rejects.toThrow(
+          'Failed to sign up',
+        );
+        expect(authenticationService.signUp).toHaveBeenCalledWith(signUpDto);
+      });
+    });
+
+    describe('signIn 실패 케이스', () => {
+      it('should throw an error if token generation fails', async () => {
+        const user: User = {
+          id: 1,
+          email: 'test@example.com',
+        } as User;
+
+        authenticationService.generateAccessToken.mockRejectedValueOnce(
+          new Error('Access token generation failed'),
+        );
+
+        const res = {
+          cookie: jest.fn(),
+        } as Partial<Response> as Response;
+
+        await expect(controller.signIn(user, res)).rejects.toThrow(
+          'Access token generation failed',
+        );
+        expect(authenticationService.generateAccessToken).toHaveBeenCalledWith(
+          user,
+        );
+      });
+    });
+
+    describe('getAccessToken 실패 케이스', () => {
+      it('should throw an error if generating access token fails', async () => {
+        const user: User = {
+          id: 1,
+          email: 'test@example.com',
+        } as User;
+
+        authenticationService.generateAccessToken.mockRejectedValueOnce(
+          new Error('Failed to generate access token'),
+        );
+
+        await expect(controller.getAccessToken(user)).rejects.toThrow(
+          'Failed to generate access token',
+        );
+        expect(authenticationService.generateAccessToken).toHaveBeenCalledWith(
+          user,
+        );
+      });
+    });
+
+    describe('googleAuthCallback 실패 케이스', () => {
+      it('should handle error when googleSignIn fails', async () => {
+        const req = {
+          user: {
+            email: 'google@example.com',
+            nickname: 'GoogleUser',
+          },
+        } as any;
+
+        const res = {
+          cookie: jest.fn(),
+          redirect: jest.fn(),
+        } as unknown as Response;
+
+        authenticationService.googleSignIn.mockRejectedValueOnce(
+          new Error('Google sign-in failed'),
+        );
+
+        await expect(
+          controller.googleAuthCallback(req, res, null),
+        ).rejects.toThrow('Google sign-in failed');
+        expect(authenticationService.googleSignIn).toHaveBeenCalledWith(
+          req.user,
+        );
+      });
+    });
+
+    describe('generateTwoFactorAuthenticationQrCode 실패 케이스', () => {
+      it('should handle error when generating 2FA QR code fails', async () => {
+        const request = {
+          user: {
+            id: 1,
+            email: 'user@example.com',
+          },
+        } as any;
+
+        const response = {
+          setHeader: jest.fn(),
+        } as unknown as Response;
+
+        authenticationService.generateTwoFactorAuthenticationSecret.mockRejectedValueOnce(
+          new Error('Failed to generate 2FA secret'),
+        );
+
+        await expect(
+          controller.generateTwoFactorAuthenticationQrCode(request, response),
+        ).rejects.toThrow('Failed to generate 2FA secret');
+        expect(
+          authenticationService.generateTwoFactorAuthenticationSecret,
+        ).toHaveBeenCalledWith(request.user);
+      });
+    });
+
+    describe('loginGoogle', () => {
+      it('should redirect to Google login page', async () => {
+        const response = await request(app.getHttpServer()).get(
+          '/authentication/google/sign-in',
+        );
+
+        expect(response.status).toBe(200);
+      });
+    });
+
+    describe('googleAuthCallback', () => {
+      // 기존 테스트 유지...
+
+      it('should redirect to state URL with access token when state is provided', async () => {
+        const req = {
+          user: {
+            email: 'google@example.com',
+            nickname: 'GoogleUser',
+          },
+        } as any;
+
+        const res = {
+          cookie: jest.fn(),
+          redirect: jest.fn(),
+        } as unknown as Response;
+
+        const accessToken = 'accessToken';
+        const refreshToken = 'refreshToken';
+
+        const authenticatedUser: User = {
+          id: 1,
+          email: 'google@example.com',
+          nickname: 'GoogleUser',
+        } as User;
+
+        authenticationService.googleSignIn.mockResolvedValueOnce(
+          authenticatedUser,
+        );
+        authenticationService.generateAccessToken.mockResolvedValueOnce(
+          accessToken,
+        );
+        authenticationService.generateRefreshToken.mockResolvedValueOnce(
+          refreshToken,
+        );
+
+        configService.get.mockImplementation((key: string) => {
+          switch (key) {
+            case 'GOOGLE_AUTH_BASE_REDIRECT_URL':
+              return 'http://localhost:3000';
+            case 'JWT_REFRESH_TOKEN_EXPIRATION_TIME':
+              return 7200;
+            case 'NODE_ENV':
+              return 'development';
+            default:
+              return null;
+          }
+        });
+
+        const stateUrl = 'http://custom-redirect-url.com';
+        await controller.googleAuthCallback(req, res, stateUrl);
+
+        expect(res.redirect).toHaveBeenCalledWith(
+          `${stateUrl}?accessToken=${accessToken}`,
+        );
+      });
+    });
+
+    describe('Guard 동작 확인', () => {
+      beforeEach(async () => {
+        // Guard를 거부하도록 설정
+        await app.close(); // 이전 인스턴스 종료
+        const module: TestingModule = await Test.createTestingModule({
+          controllers: [AuthenticationController],
+          providers: [
+            {provide: AuthenticationService, useValue: authenticationService},
+            {provide: ConfigService, useValue: configService},
+          ],
+        })
+          .overrideGuard(LocalGuard)
+          .useValue({
+            canActivate: jest.fn(() => false),
+          })
+          .compile();
+
+        app = module.createNestApplication();
+        await app.init();
+      });
+
+      afterEach(async () => {
+        await app.close();
+      });
+
+      it('should restrict access when LocalGuard denies', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/authentication/sign-in')
+          .send({email: 'test@example.com', password: 'password123'});
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('Forbidden resource');
+      });
     });
   });
 });
