@@ -1,6 +1,6 @@
 # Stage 1: Build the application
 # Use a Node.js Alpine image for a smaller final image and faster build times
-FROM node:alpine as builder
+FROM node:alpine AS builder
 
 # Set the working directory in the Docker image
 WORKDIR /usr/src/app
