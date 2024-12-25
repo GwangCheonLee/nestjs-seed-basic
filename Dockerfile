@@ -1,38 +1,41 @@
 # Stage 1: Build the application
-# Use a Node.js Alpine image for a smaller final image and faster build times
+# Use a lightweight Node.js Alpine image for faster builds
 FROM node:alpine AS builder
 
-# Set the working directory in the Docker image
+# Set working directory for the build process
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json for utilising Docker cache
-# to save re-installing dependencies if unchanged
-COPY package*.json ./
+# Copy package.json and pnpm-lock.yaml to install dependencies
+# Utilizing Docker cache to avoid redundant installs if unchanged
+COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using npm
-RUN npm install
+# Install dependencies with pnpm
+# The frozen-lockfile option ensures the lockfile is respected
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
-# Copy rest of the application code to the Docker image
+# Copy the rest of the application code
 COPY . .
 
-# Build the application using Webpack, generated files go the the dist folder
-RUN npm run build
+# Build the application, placing the output in the dist folder
+RUN pnpm run build
 
-# Stage 2: Run the application
-# Start from a new stage to keep our final image clean and small
+# Stage 2: Prepare the production environment
+# Use a new Node.js Alpine image for a clean, minimal production image
 FROM node:alpine
 
-# Set the working directory in this new stage
+# Set working directory for the runtime environment
 WORKDIR /usr/src/app
 
-# Copy only the built app and node_modules to keep the image size small
-# Using the multi-stage build to only copy necessary files
-COPY --from=builder /usr/src/app/node_modules ./node_modules
+# Copy only the built files and production dependencies
 COPY --from=builder /usr/src/app/dist ./dist
-COPY package*.json ./
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY package.json pnpm-lock.yaml ./
 
-# Expose port 3000 for the application
+# Ensure production-only dependencies are installed
+RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
+
+# Expose the application port
 EXPOSE 3000
 
-# Start the application
+# Run the application in production mode
 CMD ["npm", "run", "start:prod"]
