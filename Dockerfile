@@ -28,7 +28,6 @@ WORKDIR /usr/src/app
 
 # Copy only the built files and production dependencies
 COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml ./
 
 # Ensure production-only dependencies are installed
